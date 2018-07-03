@@ -131,6 +131,7 @@ class _Kernel(object):
         else:
             if self.k is not None:
                 dmat = np.sort(self.dmat)[:,:self.k]
+            
             else:
                 dmat = self.dmat
         
