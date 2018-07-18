@@ -1,6 +1,7 @@
 import numpy as np
 import subprocess
 import os
+import mgwr
 from spglm.utils import cache_readonly
 
 class FastGWR(object):
@@ -21,7 +22,7 @@ class FastGWR(object):
         data = np.hstack([np.array(self.coords),self.y,self.X])
         np.savetxt("temp_data.csv", data, delimiter=',',comments='')
         
-        mpi_cmd = 'mpiexec' + ' -n ' + str(nproc) + ' python ' + os.getcwd() + '/FastGWR_mpi.py ' + '-data temp_data.csv -out fastGWRResults.csv'
+        mpi_cmd = 'mpiexec' + ' -n ' + str(nproc) + ' python ' + os.path.abspath(os.path.join(mgwr.__file__, os.pardir)) + '/FastGWR_mpi.py ' + '-data temp_data.csv -out fastGWRResults.csv'
         if self.bw:
             mpi_cmd += ' -bw ' + str(self.bw)
         if self.fixed:
