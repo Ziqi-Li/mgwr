@@ -2,6 +2,7 @@ import numpy as np
 import subprocess
 import os
 import mgwr
+from tempfile import NamedTemporaryFile
 from spglm.utils import cache_readonly
 
 class FastGWR(object):
@@ -16,20 +17,25 @@ class FastGWR(object):
         self.coords = coords
         self.bw = bw
         self.fixed = fixed
-    
-    
+
     def fit(self,nproc):
         data = np.hstack([np.array(self.coords),self.y,self.X])
-        np.savetxt("temp_data.csv", data, delimiter=',',comments='')
+        datafile = NamedTemporaryFile(delete=False)
+        np.savetxt(datafile, data, delimiter=',',comments='')
+        datafile.close()
+        resultfile = NamedTemporaryFile(delete=False)
+        resultfile.name
         
-        mpi_cmd = 'mpiexec' + ' -n ' + str(nproc) + ' python ' + os.path.abspath(os.path.join(mgwr.__file__, os.pardir)) + '/FastGWR_mpi.py ' + '-data temp_data.csv -out fastGWRResults.csv'
+        mpi_cmd = 'mpiexec' + ' -n ' + str(nproc) + ' python ' + os.path.abspath(os.path.join(mgwr.__file__, os.pardir)) + '/FastGWR_mpi.py ' + '-data ' + datafile.name + ' -out ' + resultfile.name
+        
         if self.bw:
             mpi_cmd += ' -bw ' + str(self.bw)
         if self.fixed:
             mpi_cmd += ' -f 1'
-        print(mpi_cmd)
+        #print(mpi_cmd)
         subprocess.run(mpi_cmd, shell=True)
-        return FastGWRResults(self,rslt='fastGWRResults.csv')
+        
+        return FastGWRResults(self,rslt=resultfile.name)
 
 
 class FastGWRResults(object):

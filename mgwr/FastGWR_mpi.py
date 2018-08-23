@@ -7,6 +7,7 @@ import argparse
 def read(fname):
     #print("Reading",fname)
     input = np.genfromtxt(fname, dtype=float, delimiter=',',skip_header=False)
+    #input = np.load(fname)
     #Converting things into matrices
     y = input[:,2].reshape(-1,1)
     n = input.shape[0]
@@ -155,7 +156,6 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
                 np.savetxt(fout, np.delete(data, 4, 1), delimiter=',',header=header[:-1],comments='')
             '''
             np.savetxt(fout, data, delimiter=',',comments='')
-
             return
         return
     
@@ -170,7 +170,7 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
     RSS_list = comm.gather(sub_RSS, root=0)
     trS_list = comm.gather(sub_trS, root=0)
     t4 = MPI.Wtime()
-    wt_43 = comm.gather(t4-t3, root=0)
+    #wt_43 = comm.gather(t4-t3, root=0)
 
     if rank == 0:
         tot_RSS = sum(RSS_list)
@@ -180,8 +180,6 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
         aicc = -2*llf + 2.0*n*(tot_trS + 1.0)/(n-tot_trS-2.0)
         R2 = 1- tot_RSS/tot_TSS
         print("BW, AICc",bw, aicc)
-        #print("Fitting Total Wall Time for bw {} is {}".format(bw, max(wt_43)))
-        #print("Fitting Total Wall Time for bw {} is {}".format(bw, max(wt_43)))
         return aicc
     return
 
@@ -198,10 +196,10 @@ if __name__ == "__main__":
     parser.add_argument("-out")
     parser.add_argument("-bw")
     parser.add_argument("-f")
+    parser.add_argument("-minbw")
 
     fname = parser.parse_args().data
     fout  = parser.parse_args().out
-    
     
     bw = None
     if parser.parse_args().bw is not None:
@@ -210,7 +208,10 @@ if __name__ == "__main__":
     fixed = False
     if parser.parse_args().f is not None:
         fixed = True
-
+    minbw = 45
+    if parser.parse_args().minbw is not None:
+        min_bw = int(parser.parse_args().bw)
+    
     if rank==0:
         print("Starting FastGWR with",size,"Processors")
     
@@ -247,7 +248,7 @@ if __name__ == "__main__":
 
     if bw is None:
         gwr_func = lambda bw: mpi_gwr_fit(bw,fixed=fixed)
-        bw = golden_section(int(45), n, 0.38197, gwr_func)
+        bw = golden_section(minbw, n, 0.38197, gwr_func)
         mpi_gwr_fit(bw,final=True,fout=fout,fixed=fixed)
 
     else:

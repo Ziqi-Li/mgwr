@@ -238,6 +238,7 @@ def multi_bw(init, y, X, n, k, family, tol, max_iter, rss_score,
         BWs.append(copy.deepcopy(bws))
         VALs.append(copy.deepcopy(vals))
         FUNCs.append(copy.deepcopy(funcs))
+        print(iters,bws,score)
         if delta < tol:
             break
 
