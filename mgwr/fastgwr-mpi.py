@@ -274,7 +274,6 @@ if __name__ == "__main__":
         maxbw = maxbw * 2
         if parser.parse_args().minbw is not None:
             minbw = float(parser.parse_args().minbw)
-    print(minbw,maxbw,np.min(pdist(coords)))
     m = int(math.ceil(float(len(iter)) / size))
     x_chunk = iter[rank*m:(rank+1)*m]
 
