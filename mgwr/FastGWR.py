@@ -6,7 +6,7 @@ from tempfile import NamedTemporaryFile
 from spglm.utils import cache_readonly
 
 class FastGWR(object):
-    def __init__(self, coords, y, X, fixed=False, constant=True, bw=None):
+    def __init__(self, coords, y, X, fixed=False, constant=True, bw=None, min_bw=None):
         self.y = y
         self.n = y.shape[0]
         if constant:
@@ -17,6 +17,7 @@ class FastGWR(object):
         self.coords = coords
         self.bw = bw
         self.fixed = fixed
+        self.min_bw = min_bw
 
     def fit(self,nproc):
         data = np.hstack([np.array(self.coords),self.y,self.X])
@@ -26,12 +27,14 @@ class FastGWR(object):
         resultfile = NamedTemporaryFile(delete=False)
         resultfile.name
         
-        mpi_cmd = 'mpiexec' + ' -n ' + str(nproc) + ' python ' + os.path.abspath(os.path.join(mgwr.__file__, os.pardir)) + '/FastGWR_mpi.py ' + '-data ' + datafile.name + ' -out ' + resultfile.name
+        mpi_cmd = 'mpiexec' + ' -n ' + str(nproc) + ' python ' + os.path.abspath(os.path.join(mgwr.__file__, os.pardir)) + '/fastgwr-mpi.py ' + '-data ' + datafile.name + ' -out ' + resultfile.name + ' --pysal'
         
         if self.bw:
             mpi_cmd += ' -bw ' + str(self.bw)
         if self.fixed:
-            mpi_cmd += ' -f 1'
+            mpi_cmd += ' -f'
+        if self.min_bw:
+            mpi_cmd += ' -minbw ' + str(self.min_bw)
         #print(mpi_cmd)
         subprocess.run(mpi_cmd, shell=True)
         

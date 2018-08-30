@@ -44,7 +44,7 @@ def local_fit(i,bw,fixed,final=False):
         #rss_ri = np.sum(ri**2)
         #return np.concatenate(([i,err,predy,ri[i],rss_ri],betas,CCT))
         
-        return np.concatenate(([i,err,ri[i]],betas,CCT))
+        return np.concatenate(([err,betas))
     else:
         X_new = X*np.sqrt(wi)
         Y_new = y*np.sqrt(wi)
@@ -104,22 +104,15 @@ def golden_section(a, c, delta, function, tol=1.0e-6, max_iter=200, int_score=Tr
         score = comm.bcast(score,root=0)
     return opt_bw
 
-def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
+def mpi_gwr_fit(bw,final=False,fout='./FastGWRResults.csv',fixed=False):
     #Need Betas
     if final:
-        sub_Betas = np.empty((x_chunk.shape[0],2*k+3), dtype=np.float64)
+        sub_Betas = np.empty((x_chunk.shape[0],k+1), dtype=np.float64)
         #print(x_chunk.shape[0])
         pos = 0
         for i in x_chunk:
             sub_Betas[pos] = local_fit(i,bw,fixed,final)
             pos+=1
-        
-        '''
-        offset = rank*sub_Betas.nbytes
-        
-        fh.Write_at_all(offset, sub_Betas.reshape(-1))
-        fh.Close()
-        '''
 
         Betas_list = comm.gather(sub_Betas, root=0)
         
@@ -182,6 +175,17 @@ def mpi_gwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
         print("BW, AICc",bw, aicc)
         return aicc
     return
+
+
+def mpi_mgwr_fit(bw,final=False,fout='./fastGWRResults.csv',fixed=False):
+    gwr_func = lambda bw: mpi_gwr_fit(bw,fixed=fixed)
+    bw = golden_section(minbw, n, 0.38197, gwr_func)
+    mpi_gwr_fit(bw,final=True,fout=fout,fixed=fixed)
+    
+    
+    S = optim_model.S
+    err = optim_model.resid_response.reshape((-1,1))
+    param = optim_model.params
 
 
 if __name__ == "__main__":

@@ -162,13 +162,12 @@ def multi_bw(init, y, X, n, k, family, tol, max_iter, rss_score,
         optim_model = gwr_func(y, X, bw)
     else:
         optim_model = gwr_func(y, X, init)
-     
+    
     S = optim_model.S
     err = optim_model.resid_response.reshape((-1,1))
     param = optim_model.params
     
     R = np.zeros((n,n,k))
-    
     for j in range(k):
         for i in range(n):
             wi = optim_model.W[i].reshape(-1,1)
@@ -238,7 +237,6 @@ def multi_bw(init, y, X, n, k, family, tol, max_iter, rss_score,
         BWs.append(copy.deepcopy(bws))
         VALs.append(copy.deepcopy(vals))
         FUNCs.append(copy.deepcopy(funcs))
-        print(iters,bws,score)
         if delta < tol:
             break
 
