@@ -25,14 +25,16 @@
        - name: checkout repo
          uses: actions/checkout@v2
        
+       - name: install spglm via pip
+         shell: bash -l {0}
+         run: pip install --upgrade git+https://github.com/pysal/spglm.git@master
+       
        - name: setup micromamba
          uses: mamba-org/provision-with-micromamba@main
          with:
            environment-file: ${{ matrix.environment-file }}
            micromamba-version: 'latest'
-       - name: install spglm via pip
-         shell: bash -l {0}
-         run: pip install --upgrade git+https://github.com/pysal/spglm.git@master
+
          
        - name: install spreg via pip
          shell: bash -l {0}
